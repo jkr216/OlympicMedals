@@ -1,0 +1,75 @@
+---
+title: "OlympicMedalsFlex"
+resource_files:
+- OlympicMedalNotebook.Rmd
+- SourceData.RDat
+runtime: shiny
+output:
+  flexdashboard::flex_dashboard:
+    orientation: rows
+    source_code: embed
+---
+
+```{r setup, include=FALSE}
+# Load packages and initialize data here
+library(flexdashboard)
+library(ggplot2)
+library(leaflet)
+library(stringr)
+
+##load data
+load('~/OlympicMedals/SourceData.RDat')
+
+qpal <- colorQuantile("Blues", world$gdp_md_est, n = 20)
+
+##create popup country name and economic stage
+popup <- paste0("<strong>Country: </strong>", 
+                world$admin)
+
+leaf_world <- leaflet(world) %>%
+  addProviderTiles("CartoDB.Positron") %>% 
+  setView(lng =  10, lat =  15, zoom = 2) %>%
+      addPolygons(stroke = FALSE, smoothFactor = 0.2, fillOpacity = .7, color =
+      ~qpal(gdp_md_est), layerId = ~admin, popup = popup)
+
+# The palette with grey:
+cbPalette <- c("#ffd700", "#c0c0c0", "#cd7f32", "#56B4E9")
+
+
+```
+
+Row {data-height=650}
+-------------------------------------
+
+### World Map
+
+```{r, echo = FALSE}
+
+  leafletOutput("map1")
+
+  output$map1 <- renderLeaflet({
+    leaf_world
+  })
+```
+
+Row {data-height=350}
+-------------------------------------
+
+### Medal Count
+
+```{r, echo=FALSE}
+ 
+plotOutput("medalPlot")
+
+output$medalPlot <- renderPlot({
+  req(input$map1_shape_click$id)
+  country <- subset(gathered_medals, Country == as.character(input$map1_shape_click$id))
+  
+  ggplot(country, aes(x = medal, y = count, fill=medal)) + 
+      geom_bar(stat = "identity") + 
+      scale_y_continuous() +
+      scale_fill_manual(values = cbPalette) +
+      ggtitle(paste(as.character(input$map1_shape_click$id), "Medals at Rio Olympics"))
+})
+
+```

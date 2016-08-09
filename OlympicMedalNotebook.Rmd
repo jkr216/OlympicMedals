@@ -11,10 +11,23 @@ Try executing this chunk by clicking the *Run* button within the chunk or by pla
 library(readxl)
 library(tidyr)
 library(ggplot2)
+library(sp)
+library(rgdal)
+library(stringr)
 medalcount <- read_excel("~/OlympicMedals/MedalCount.xlsx")
+
+##make the names consistent with the world spatial data frame
+medalcount$Country <- str_replace_all(medalcount$Country, "United States", "United States of America")
+medalcount$Country <- str_replace_all(medalcount$Country, "Republic of Korea", "South Korea")
+medalcount$Country <- str_replace_all(medalcount$Country, "Dem. People's Repub. of Korea", "North Korea")
+medalcount$Country <- str_replace_all(medalcount$Country, "Chinese Taipei", "Taiwan")
+
+
 medalcount[,c(2:5)] = apply(medalcount[,c(2:5)], 2, function(x) as.numeric(x))
 gathered_medals <- gather(medalcount, medal, count, -Country, na.rm = TRUE)
 gathered_medals$medal <- factor(gathered_medals$medal, ordered = TRUE, levels = c("Gold", "Silver", "Bronze", "Total"))
+
+world <-readOGR(".", "ne_50m_admin_0_countries", verbose = FALSE)
 
 ```
 
@@ -24,9 +37,10 @@ Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by press
 # The palette with grey:
 cbPalette <- c("#ffd700", "#c0c0c0", "#cd7f32", "#56B4E9")
 
-USA <- subset(gathered_medals, Country=="United States")
+##make it Country == input$map1_click_id$NAME
+country <- subset(gathered_medals, Country=="United States")
 
-plot<-ggplot(USA, aes(x = medal, y = count, fill=medal)) + 
+plot<-ggplot(country, aes(x = medal, y = count, fill=medal)) + 
       geom_bar(stat = "identity") + 
       scale_fill_manual(values = cbPalette)
        ##+     facet_wrap(~Country, ncol = 10)
