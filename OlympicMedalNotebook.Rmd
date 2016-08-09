@@ -1,0 +1,36 @@
+---
+title: "Olympic Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r setup}
+library(readxl)
+library(tidyr)
+library(ggplot2)
+medalcount <- read_excel("~/OlympicMedals/MedalCount.xlsx")
+medalcount[,c(2:5)] = apply(medalcount[,c(2:5)], 2, function(x) as.numeric(x))
+gathered_medals <- gather(medalcount, medal, count, -Country, na.rm = TRUE)
+gathered_medals$medal <- factor(gathered_medals$medal, ordered = TRUE, levels = c("Gold", "Silver", "Bronze", "Total"))
+
+```
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
+
+```{r}
+# The palette with grey:
+cbPalette <- c("#ffd700", "#c0c0c0", "#cd7f32", "#56B4E9")
+
+USA <- subset(gathered_medals, Country=="United States")
+
+plot<-ggplot(USA, aes(x = medal, y = count, fill=medal)) + 
+      geom_bar(stat = "identity") + 
+      scale_fill_manual(values = cbPalette)
+       ##+     facet_wrap(~Country, ncol = 10)
+
+plot
+```
+
