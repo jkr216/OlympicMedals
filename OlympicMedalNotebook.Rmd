@@ -3,17 +3,15 @@ title: "Olympic Notebook"
 output: html_notebook
 ---
 
-This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
 
-Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
-
-```{r setup}
+```{r setup, echo=FALSE}
 library(readxl)
 library(tidyr)
 library(ggplot2)
 library(sp)
 library(rgdal)
 library(stringr)
+
 medalcount <- read_excel("~/OlympicMedals/MedalCount.xlsx")
 
 ##make the names consistent with the world spatial data frame
@@ -21,15 +19,22 @@ medalcount$Country <- str_replace_all(medalcount$Country, "United States", "Unit
 medalcount$Country <- str_replace_all(medalcount$Country, "Republic of Korea", "South Korea")
 medalcount$Country <- str_replace_all(medalcount$Country, "Dem. People's Repub. of Korea", "North Korea")
 medalcount$Country <- str_replace_all(medalcount$Country, "Chinese Taipei", "Taiwan")
+medalcount$Country <- str_replace_all(medalcount$Country, "Great Britain", "United Kingdom")
 
 
 medalcount[,c(2:5)] = apply(medalcount[,c(2:5)], 2, function(x) as.numeric(x))
+medalcount <- medalcount[,-5]
+
 gathered_medals <- gather(medalcount, medal, count, -Country, na.rm = TRUE)
-gathered_medals$medal <- factor(gathered_medals$medal, ordered = TRUE, levels = c("Gold", "Silver", "Bronze", "Total"))
+gathered_medals$medal <- factor(gathered_medals$medal, ordered = TRUE, levels = c("Gold", "Silver", "Bronze"))
 
 world <-readOGR(".", "ne_50m_admin_0_countries", verbose = FALSE)
 
+### Save
+save(world, gathered_medals, file = 'SourceData.RDat')
+
 ```
+
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Cmd+Option+I*.
 
@@ -42,8 +47,10 @@ country <- subset(gathered_medals, Country=="United States")
 
 plot<-ggplot(country, aes(x = medal, y = count, fill=medal)) + 
       geom_bar(stat = "identity") + 
-      scale_fill_manual(values = cbPalette)
-       ##+     facet_wrap(~Country, ncol = 10)
+      scale_fill_manual(values = cbPalette) +
+      ggtitle("United States Medals at Rio Olympics")
+
+
 
 plot
 ```

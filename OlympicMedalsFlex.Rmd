@@ -1,7 +1,6 @@
 ---
 title: "OlympicMedalsFlex"
 resource_files:
-- OlympicMedalNotebook.Rmd
 - SourceData.RDat
 runtime: shiny
 output:
@@ -15,12 +14,13 @@ output:
 library(flexdashboard)
 library(ggplot2)
 library(leaflet)
+library(DT)
 library(stringr)
 
 ##load data
-load('~/OlympicMedals/SourceData.RDat')
+load('SourceData.RDat')
 
-qpal <- colorQuantile("Blues", world$gdp_md_est, n = 20)
+qpal <- colorQuantile("GnBu", world$gdp_md_est, n = 50)
 
 ##create popup country name and economic stage
 popup <- paste0("<strong>Country: </strong>", 
@@ -52,7 +52,7 @@ Row {data-height=650}
   })
 ```
 
-Row {data-height=350}
+Row {.tabset .tabset-fade}
 -------------------------------------
 
 ### Medal Count
@@ -66,10 +66,20 @@ output$medalPlot <- renderPlot({
   country <- subset(gathered_medals, Country == as.character(input$map1_shape_click$id))
   
   ggplot(country, aes(x = medal, y = count, fill=medal)) + 
-      geom_bar(stat = "identity") + 
+      geom_bar(stat = "identity", width = .4) + 
       scale_y_continuous() +
       scale_fill_manual(values = cbPalette) +
       ggtitle(paste(as.character(input$map1_shape_click$id), "Medals at Rio Olympics"))
 })
 
 ```
+
+###Data Table
+
+```{r}
+renderDataTable({
+     datatable(medalcount)
+  })
+
+```
+
